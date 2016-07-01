@@ -20,12 +20,12 @@ class Feed
     static protected $events;
 
     /**
-     * @param \DateTime $dateTime
+     * @param \DateTimeInterface $dateTime
      * @param null|string $division
      * @return null|\stdClass[]
      * @throws \Exception
      */
-    static public function getHolidays(\DateTime $dateTime, $division = null)
+    static public function getHolidays(\DateTimeInterface $dateTime, $division = null)
     {
         self::loadHolidayData();
 
@@ -39,11 +39,11 @@ class Feed
     }
 
     /**
-     * @param \DateTime $dateTime
+     * @param \DateTimeInterface $dateTime
      * @param string    $division
      * @return bool
      */
-    static public function isHoliday(\DateTime $dateTime, $division = null)
+    static public function isHoliday(\DateTimeInterface $dateTime, $division = null)
     {
         self::loadHolidayData();
 
