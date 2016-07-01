@@ -114,7 +114,7 @@ class Feed
      * @return \stdClass|\stdClass[]
      * @throws \Exception
      */
-    protected function filterByDivision($division)
+    static protected function filterByDivision($division)
     {
         if (is_null($division)){
             return self::$events;
