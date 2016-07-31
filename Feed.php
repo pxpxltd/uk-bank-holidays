@@ -20,17 +20,21 @@ class Feed
     static protected $events;
 
     /**
-     * @param \DateTimeInterface $dateTime
+     * @param null|\DateTimeInterface $dateTime
      * @param null|string $division
      * @return null|\stdClass[]
      * @throws \Exception
      */
-    static public function getHolidays(\DateTimeInterface $dateTime, $division = null)
+    static public function getHolidays(\DateTimeInterface $dateTime = null, $division = null)
     {
         self::loadHolidayData();
 
         /** @var \stdClass $events */
         $events = self::filterByDivision($division);
+
+        if (!$dateTime) {
+            return $events;
+        }
 
         /** @var string $dateKey */
         $dateKey = $dateTime->format('Y-m-d');
