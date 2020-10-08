@@ -39,7 +39,7 @@ class Feed
         /** @var string $dateKey */
         $dateKey = $dateTime->format('Y-m-d');
 
-        return (isset($events[$dateKey])) ? $events[$dateKey] : null;
+        return (isset($events[$dateKey])) ? $events[$dateKey] : [];
     }
 
     /**
