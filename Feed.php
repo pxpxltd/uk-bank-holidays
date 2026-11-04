@@ -19,13 +19,16 @@ class Feed
     /** @var \stdClass[] */
     static protected $events;
 
+    /** @var null|callable */
+    static protected $fetcher = null;
+
     /**
      * @param null|\DateTimeInterface $dateTime
      * @param null|string $division
      * @return null|\stdClass[]
      * @throws \Exception
      */
-    static public function getHolidays(\DateTimeInterface $dateTime = null, $division = null)
+    static public function getHolidays(?\DateTimeInterface $dateTime = null, $division = null)
     {
         self::loadHolidayData();
 
@@ -60,6 +63,46 @@ class Feed
         return self::$divisions;
     }
 
+    /**
+     * Test seam: replace the live fetch with a callable returning the raw JSON
+     * string, and reset any loaded data. Pass null to restore the live fetch.
+     *
+     * @param null|callable $fetcher
+     * @return void
+     */
+    static public function useFetcher(?callable $fetcher = null)
+    {
+        self::$fetcher = $fetcher;
+        self::$hasBeenLoaded = false;
+        self::$divisions = null;
+        self::$events = null;
+    }
+
+    /**
+     * Fetch the raw feed body, from the test seam if set, otherwise from gov.uk.
+     *
+     * @return string|false
+     */
+    static protected function fetchJson()
+    {
+        if (self::$fetcher !== null) {
+            return call_user_func(self::$fetcher);
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_URL, self::FEED_URL);
+
+        $json = curl_exec($ch);
+        unset($ch);
+
+        return $json;
+    }
+
     static protected function loadHolidayData()
     {
         if (self::$hasBeenLoaded) {
@@ -69,14 +112,11 @@ class Feed
         /** @var string $url */
         $url = self::FEED_URL;
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, self::FEED_URL);
+        $json = self::fetchJson();
 
-        /** @var string $json */
-        $json = curl_exec($ch);
-        curl_close($ch);
+        if (!is_string($json) || $json === '') {
+            throw new \Exception("Unable to load holiday data from $url");
+        }
 
         /** @var \stdClass $data */
         $data = json_decode($json);
